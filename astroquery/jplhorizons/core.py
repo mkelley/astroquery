@@ -544,8 +544,8 @@ class HorizonsClass(BaseQuery):
 
         # parse self.epochs
         if isinstance(self.epochs, (list, tuple, ndarray)):
-            request_payload['TLIST'] = "\n".join([str(epoch) for epoch in
-                                                  self.epochs])
+            request_payload['TLIST'] = ",".join([str(epoch) for epoch in
+                                                 self.epochs])
         elif isinstance(self.epochs, dict):
             if ('start' not in self.epochs or 'stop' not in self.epochs or
                     'step' not in self.epochs):
@@ -759,7 +759,7 @@ class HorizonsClass(BaseQuery):
 
         # parse self.epochs
         if isinstance(self.epochs, (list, tuple, ndarray)):
-            request_payload['TLIST'] = "\n".join([str(epoch) for
+            request_payload['TLIST'] = ",".join([str(epoch) for
                                                   epoch in
                                                   self.epochs])
         elif type(self.epochs) is dict:
@@ -995,7 +995,7 @@ class HorizonsClass(BaseQuery):
 
         # parse self.epochs
         if isinstance(self.epochs, (list, tuple, ndarray)):
-            request_payload['TLIST'] = "\n".join([str(epoch) for epoch in
+            request_payload['TLIST'] = ",".join([str(epoch) for epoch in
                                                   self.epochs])
         elif type(self.epochs) is dict:
             if ('start' not in self.epochs or 'stop' not in self.epochs or
