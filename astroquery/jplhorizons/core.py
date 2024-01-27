@@ -4,11 +4,12 @@ __all__ = ["Horizons", "HorizonsClass"]
 
 from typing import Dict, Optional, Union
 
-# import numpy as np
+from requests import Response
 import astropy.units as u
 import astropy.coordinates as coord
 from astropy.table import Table
-from astrpy.time import Time
+from astropy.time import Time
+from astropy.coordinates import EarthLocation
 
 from ..query import BaseQuery
 from ..utils import commons
@@ -26,11 +27,13 @@ class HorizonsClass(BaseQuery):
     TIMEOUT: int = conf.timeout
 
     def _get_command(self,
-                     object_name: str,
+                     query: str,
                      query_type: Union[str, None],
                      closest_apparition: bool,
                      fragments: bool
                     ) -> str:
+        """Form the COMMAND parameter."""
+
         query_type_to_command_prefix: Dict[str, str] = {
             "designation": "DES=",
             "name": "NAME=",
@@ -38,6 +41,7 @@ class HorizonsClass(BaseQuery):
             "comet name": "COMNAM=",
             "small body": "",
             None: "",
+            "orbit": "",
             # legacy compatibility:
             "asteroid_name": "ASTNAM=",
             "smallbody": "",
@@ -73,17 +77,29 @@ class HorizonsClass(BaseQuery):
 
         fragments: str = "NOFRAG;" if fragments is False else ""
 
+        return "".join([prefix, query, suffix, cap, fragments])
+
+    def _get_center(self, center):
+        """Form the CENTER parameter."""
+
+        if isinstance(center, str):
+            return center
+        elif isinstance(center, EarthLocation):
+            pass
+        else:
+            raise TypeError("center must be a string or `EarthLocation`")
+
     def query_observer_async(self,
                              query: str,
                              *,
                              query_type: Optional[str] = None,
                              closest_apparition: Optional[Union[bool, float]] = None,
                              fragments: bool = True,
-                             center: Optional[str] = None,
+                             center: Optional[Union[str, EarthLocation]] = None,
                              get_query_payload: bool = False,
                              cache: bool = True,
                              **kwargs
-                            ) -> None:
+                            ) -> Response:
         """
         Query for an object's observables.
 
@@ -95,7 +111,7 @@ class HorizonsClass(BaseQuery):
 
         query_type : string, optional
             The type of target query: "designation", "name", "asteroid name",
-            "comet name", or "small body".
+            "comet name", "small body"
 
         closest_apparition : bool or `~astropy.time.Time`, optional
             For comet queries.  If `True`, match the last apparition before the
@@ -127,34 +143,39 @@ class HorizonsClass(BaseQuery):
         Object specifications:
 
         >>> from astroquery.jplhorizons import Horizons
-        >>> Horizons.query_observer("Jupiter")
         >>>
-        >>> Horizons.query_observer("1", center="568")
+        >>> tab = Horizons.query_observer("Jupiter")
         >>>
-        >>> Horizons.query_observer("europa", center="I41", id_type="name")
+        >>> tab =Horizons.query_observer("1", center="568")
         >>>
-        >>> Horizons.query_observer("2P", id_type="designation")
-        >>> Horizons.query_observer("2P",
-        ...                          id_type="designation",
-        ...                          closest_apparition=True)
+        >>> tab = Horizons.query_observer("europa", center="I41", query_type="name")
         >>>
-        >>> Horizons.query_observer("73P",
-        ...                          id_type="designation",
-        ...                          closest_apparition=True,
-        ...                          fragments=False)
+        >>> tab = Horizons.query_observer("2P", query_type="designation")
         >>>
+        >>> tab = Horizons.query_observer("2P",
+        ...                               query_type="designation",
+        ...                               closest_apparition=True)
+        >>>
+        >>> tab = Horizons.query_observer("73P",
+        ...                               query_type="designation",
+        ...                               closest_apparition=True,
+        ...                               fragments=False)
+
+        Orbital integrations are also possible.  Set all orbital elements within
+        the query string following the Horizons documentation:
+
         >>> tab = Horizons.query_observer(
-        ...     "comet",
-        ...     id_type="orbit",
-        ...     epoch=Time(2450200.5, scale="tdb", format="jd"),
-        ...     ec=0.8241907231263196,
-        ...     qr=0.532013766859137 * u.au,
-        ...     tp=Time(2450077.480966184235, scale="tdb", format="jd"),
-        ...     om=89.14262290335057 * u.deg,
-        ...     w=326.0591239257098 * u.deg,
-        ...     in=4.247821264821585 * u.deg,
-        ...     a1=-5.113711376907895D-10 * u.au / u.d**2,
-        ...     a2=-6.288085687976327D-10 * u.au / u.d**2)
+        ...     "object=comet "
+        ...     "epoch=2450200.5 "
+        ...     "ec=0.8241907231263196 "
+        ...     "qr=0.532013766859137 "
+        ...     "tp=2450077.480966184235 "
+        ...     "om=89.14262290335057 "
+        ...     "w=326.0591239257098 "
+        ...     "in=4.247821264821585 "
+        ...     "a1=-5.113711376907895D-10 "
+        ...     "a2=-6.288085687976327D-10"
+        ... )
 
         The observer (ephemeris center) can also be an
         `~astropy.coordinates.EarthLocation`:
@@ -181,19 +202,26 @@ class HorizonsClass(BaseQuery):
         
         request_payload = dict()
 
-        request_payload["command"] = self.get_command(
-            query,
-            id_type,
-            closest_apparition,
-            fragments,
-        )
+        request_payload["command"] = self._get_command(query,
+                                                       query_type,
+                                                       closest_apparition,
+                                                       fragments)
 
+        if get_query_payload:
+            return request_payload
+
+        response: Response = self._request("GET",
+                                           self.URL,
+                                           params=request_payload,
+                                           timeout=self.TIMEOUT,
+                                           cache=cache)
+        return response
 
     def query_vectors_async(self,
                             obj,
                             center,
                             *,
-                            id_type=None,
+                            query_type=None,
                             closest_apparition=False,
                             fragments=True,
                             get_query_payload=False,
@@ -221,7 +249,7 @@ class HorizonsClass(BaseQuery):
     def query_elements_async(self,
                              obj,
                              *,
-                             id_type=None,
+                             query_type=None,
                              closest_apparition=False,
                              fragments=True,
                              get_query_payload=False,
