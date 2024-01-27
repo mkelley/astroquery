@@ -9,7 +9,7 @@ import astropy.units as u
 import astropy.coordinates as coord
 from astropy.table import Table
 from astropy.time import Time
-from astropy.coordinates import EarthLocation
+from astropy.coordinates.earth import EarthLocation, GeodeticLocation
 
 from ..query import BaseQuery
 from ..utils import commons
@@ -26,8 +26,8 @@ class HorizonsClass(BaseQuery):
     URL: str = conf.server
     TIMEOUT: int = conf.timeout
 
-    def _get_command(self,
-                     query: str,
+    def _format_command(self,
+                     target: str,
                      query_type: Union[str, None],
                      closest_apparition: bool,
                      fragments: bool
@@ -41,7 +41,6 @@ class HorizonsClass(BaseQuery):
             "comet name": "COMNAM=",
             "small body": "",
             None: "",
-            "orbit": "",
             # legacy compatibility:
             "asteroid_name": "ASTNAM=",
             "smallbody": "",
@@ -77,20 +76,41 @@ class HorizonsClass(BaseQuery):
 
         fragments: str = "NOFRAG;" if fragments is False else ""
 
-        return "".join([prefix, query, suffix, cap, fragments])
+        return "".join([prefix, target, suffix, cap, fragments])
 
-    def _get_center(self, center):
-        """Form the CENTER parameter."""
+    def _format_center(self, center: Union[str, EarthLocation]) -> Dict[str, str]:
+        """Form the CENTER parameter.
+        
+        GEODETIC (generally this means map coordinates)
+            E-long - Geodetic east longitude (DEGREES)
+            lat    - Geodetic latitude  (DEGREES)
+            h      - Altitude above reference ellipsoid (km)
+
+        Comma separated values.
+
+        """
 
         if isinstance(center, str):
-            return center
+            return {"center": center}
         elif isinstance(center, EarthLocation):
-            pass
-        else:
-            raise TypeError("center must be a string or `EarthLocation`")
+            loc: GeodeticLocation = center.to_geodetic("WGS84")
+
+            site_coord: str = (
+                f"{loc.lon.deg}, {loc.lat.deg}, {loc.height.to_value('km')}"
+            )
+
+            return {
+                "center": "coord",
+                "coord_type": "geodetic",
+                "site_coord": site_coord,
+            }
+        
+        raise TypeError("center must be a string or `EarthLocation`")
+        
+        
 
     def query_observer_async(self,
-                             query: str,
+                             target: str,
                              *,
                              query_type: Optional[str] = None,
                              closest_apparition: Optional[Union[bool, float]] = None,
@@ -106,7 +126,7 @@ class HorizonsClass(BaseQuery):
         
         Parameters
         ----------
-        query : string
+        target : string
             The target query string.
 
         query_type : string, optional
@@ -142,11 +162,13 @@ class HorizonsClass(BaseQuery):
 
         Object specifications:
 
+        >>> from astropy.time import Time
+        >>> import astropy.units as u
         >>> from astroquery.jplhorizons import Horizons
         >>>
         >>> tab = Horizons.query_observer("Jupiter")
         >>>
-        >>> tab =Horizons.query_observer("1", center="568")
+        >>> tab = Horizons.query_observer("1", center="568")
         >>>
         >>> tab = Horizons.query_observer("europa", center="I41", query_type="name")
         >>>
@@ -156,13 +178,24 @@ class HorizonsClass(BaseQuery):
         ...                               query_type="designation",
         ...                               closest_apparition=True)
         >>>
+        >>> tab = Horizons.query_observer("2P",
+        ...                               query_type="designation",
+        ...                               closest_apparition=Time("2003-11-20"))
+        >>>
         >>> tab = Horizons.query_observer("73P",
         ...                               query_type="designation",
         ...                               closest_apparition=True,
         ...                               fragments=False)
+        >>>
 
-        Orbital integrations are also possible.  Set all orbital elements within
-        the query string following the Horizons documentation:
+        Any target query supported by Horizons is possible, simply format the
+        target string according to the documentation.  For example, to search
+        for all S-type small-bodies with semi-major axis less than 2.5 au and
+        inclination greater than 7.8 degrees with a known (non-zero) GM:
+
+        >>> tab = Horizons.query_observer("A < 2.5; IN > 7.8; STYP = S, GM <> 0;"
+
+        Or, to specify the orbital elements:
 
         >>> tab = Horizons.query_observer(
         ...     "object=comet "
@@ -181,9 +214,9 @@ class HorizonsClass(BaseQuery):
         `~astropy.coordinates.EarthLocation`:
 
         >>> from astropy.coordinates import EarthLocation
-        >>> college_park = EarthLocation.from_geodetic(-76.9378 * u.deg,
-        ...                                            38.9897 * u.deg,
-        ...                                            21 * u.m)
+        >>> college_park = EarthLocation.from_geodetic(76.935 * u.deg,
+        ...                                            38.9867 * u.deg,
+        ...                                            0 * u.km)
         >>> tab = Horizons.query_observer("Jupiter", center=college_park)
 
         Specifying time:
@@ -202,10 +235,12 @@ class HorizonsClass(BaseQuery):
         
         request_payload = dict()
 
-        request_payload["command"] = self._get_command(query,
+        request_payload["command"] = self._format_command(target,
                                                        query_type,
                                                        closest_apparition,
                                                        fragments)
+
+        request_payload["center"] = self._format_center(center)
 
         if get_query_payload:
             return request_payload

@@ -244,6 +244,7 @@ class LegacyConf(_config.ConfigNamespace):
 conf = Conf()
 legacy_conf = LegacyConf()
 
+from .core import Horizons, HorizonsClass
 from .legacy import HorizonsLegacy, HorizonsLegacyClass
 
 __all__ = [
