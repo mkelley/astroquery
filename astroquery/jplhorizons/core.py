@@ -29,7 +29,7 @@ class HorizonsClass(BaseQuery):
     def _format_command(self,
                      target: str,
                      query_type: Union[str, None],
-                     closest_apparition: bool,
+                     closest_apparition: Union[bool, Time],
                      fragments: bool
                     ) -> str:
         """Form the COMMAND parameter."""
@@ -96,11 +96,11 @@ class HorizonsClass(BaseQuery):
             loc: GeodeticLocation = center.to_geodetic("WGS84")
 
             site_coord: str = (
-                f"{loc.lon.deg}, {loc.lat.deg}, {loc.height.to_value('km')}"
+                f"{loc.lon.deg},{loc.lat.deg},{loc.height.to_value('km')}"
             )
 
             return {
-                "center": "coord",
+                "center": "coord@399",
                 "coord_type": "geodetic",
                 "site_coord": site_coord,
             }
@@ -113,7 +113,7 @@ class HorizonsClass(BaseQuery):
                              target: str,
                              *,
                              query_type: Optional[str] = None,
-                             closest_apparition: Optional[Union[bool, float]] = None,
+                             closest_apparition: Union[bool, Time] = False,
                              fragments: bool = True,
                              center: Optional[Union[str, EarthLocation]] = None,
                              get_query_payload: bool = False,
@@ -240,7 +240,7 @@ class HorizonsClass(BaseQuery):
                                                        closest_apparition,
                                                        fragments)
 
-        request_payload["center"] = self._format_center(center)
+        request_payload.update(self._format_center(center))
 
         if get_query_payload:
             return request_payload
