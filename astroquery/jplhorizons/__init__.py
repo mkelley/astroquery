@@ -4,7 +4,6 @@
 JPLHorizons
 -----------
 
-:author: Michael Mommert (mommermiscience@gmail.com)
 """
 
 from astropy import config as _config
@@ -12,7 +11,27 @@ from astropy import config as _config
 
 class Conf(_config.ConfigNamespace):
     """
-    Configuration parameters for `astroquery.jplhorizons`.
+    Configuration parameters for `astroquery.jplhorizons.core
+    """
+
+    # server settings
+    server = _config.ConfigItem(
+        ["https://ssd.jpl.nasa.gov/api/horizons.api",],
+        "JPL Horizons",
+    )
+
+    timeout = _config.ConfigItem(
+        30,
+        "Time limit for connecting to JPL servers."
+    )
+    
+    # supported Horizons API version
+    api_version = "1.2"
+
+
+class LegacyConf(_config.ConfigNamespace):
+    """
+    Configuration parameters for `astroquery.jplhorizons.legacy`.
     """
 
     # server settings
@@ -222,11 +241,18 @@ class Conf(_config.ConfigNamespace):
                    'RR': ('range_rate',
                           'AU/d')}
 
-
 conf = Conf()
+legacy_conf = LegacyConf()
 
-from .core import Horizons, HorizonsClass
+from .legacy import HorizonsLegacy, HorizonsLegacyClass
 
-__all__ = ['Horizons', 'HorizonsClass',
-           'Conf', 'conf',
-           ]
+__all__ = [
+    "Horizons",
+    "HorizonsClass",
+    "Conf",
+    "conf"
+    "HorizonsLegacy",
+    "HorizonsLegacyClass",
+    "LegacyConf",
+    "legacy_conf",
+]

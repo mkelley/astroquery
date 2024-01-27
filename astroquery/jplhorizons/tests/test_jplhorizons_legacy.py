@@ -60,7 +60,7 @@ def nonremote_request(self, request_type, url, **kwargs):
 def patch_request(request):
     mp = request.getfixturevalue("monkeypatch")
 
-    mp.setattr(jplhorizons.core.HorizonsClass, '_request',
+    mp.setattr(jplhorizons.legacy.HorizonsLegacyClass, '_request',
                nonremote_request)
     return mp
 
@@ -68,7 +68,7 @@ def patch_request(request):
 # --------------------------------- actual test functions
 
 def test_parse_result(patch_request):
-    q = jplhorizons.Horizons(id='tlist_error')
+    q = jplhorizons.HorizonsLegacy(id='tlist_error')
     # need _last_query to be defined
     q._last_query = AstroQuery('GET', 'http://dummy')
     with pytest.raises(ValueError):
@@ -78,7 +78,7 @@ def test_parse_result(patch_request):
 def test_ephemerides_query(patch_request):
     # check values of Ceres for a given epoch
     # orbital uncertainty of Ceres is basically zero
-    res = jplhorizons.Horizons(id='Ceres', location='500',
+    res = jplhorizons.HorizonsLegacy(id='Ceres', location='500',
                                epochs=2451544.5).ephemerides()[0]
 
     assert res['targetname'] == "1 Ceres (A801 AA)"
@@ -110,7 +110,7 @@ def test_ephemerides_query(patch_request):
 def test_elements_query(patch_request):
     # check values of Ceres for a given epoch
     # orbital uncertainty of Ceres is basically zero
-    res = jplhorizons.Horizons(id='Ceres', location='500@10',
+    res = jplhorizons.HorizonsLegacy(id='Ceres', location='500@10',
                                epochs=2451544.5).elements()[0]
 
     assert res['targetname'] == "1 Ceres (A801 AA)"
@@ -136,7 +136,7 @@ def test_elements_query(patch_request):
 def test_elements_vectors(patch_request):
     # check values of Ceres for a given epoch
     # orbital uncertainty of Ceres is basically zero
-    res = jplhorizons.Horizons(id='Ceres', location='500@10',
+    res = jplhorizons.HorizonsLegacy(id='Ceres', location='500@10',
                                epochs=2451544.5).vectors()[0]
 
     assert res['targetname'] == "1 Ceres (A801 AA)"
@@ -154,7 +154,7 @@ def test_elements_vectors(patch_request):
 
 
 def test_ephemerides_query_payload():
-    obj = jplhorizons.Horizons(id='Halley', id_type='comet_name',
+    obj = jplhorizons.HorizonsLegacy(id='Halley', id_type='comet_name',
                                location='290',
                                epochs={'start': '2080-01-01',
                                        'stop': '2080-02-01',
@@ -192,7 +192,7 @@ def test_ephemerides_query_payload_with_optional_settings():
     """
     Assert that all optional settings are provided at query payload
     """
-    obj = jplhorizons.Horizons(id='Halley', id_type='comet_name',
+    obj = jplhorizons.HorizonsLegacy(id='Halley', id_type='comet_name',
                                location='290',
                                epochs={'start': '2080-01-01',
                                        'stop': '2080-02-01',
@@ -233,7 +233,7 @@ def test_ephemerides_query_payload_with_optional_settings():
 
 
 def test_elements_query_payload():
-    res = (jplhorizons.Horizons(id='Ceres', location='500@10',
+    res = (jplhorizons.HorizonsLegacy(id='Ceres', location='500@10',
                                 epochs=2451544.5).elements(
                                     get_query_payload=True))
 
@@ -254,7 +254,7 @@ def test_elements_query_payload():
 
 
 def test_vectors_query_payload():
-    res = jplhorizons.Horizons(id='Ceres', location='500@10',
+    res = jplhorizons.HorizonsLegacy(id='Ceres', location='500@10',
                                epochs=2451544.5).vectors(
                                    get_query_payload=True)
     assert res == OrderedDict([
@@ -276,7 +276,7 @@ def test_vectors_query_payload():
 
 def test_no_H(patch_request):
     """testing missing H value (also applies for G, M1, k1, M2, k2)"""
-    res = jplhorizons.Horizons(id='1935 UZ').ephemerides()[0]
+    res = jplhorizons.HorizonsLegacy(id='1935 UZ').ephemerides()[0]
     assert 'H' not in res
 
 
@@ -288,10 +288,10 @@ def test_id_type_deprecation():
     """
 
     with pytest.warns(AstropyDeprecationWarning):
-        jplhorizons.Horizons(id='Ceres', id_type='id')
+        jplhorizons.HorizonsLegacy(id='Ceres', id_type='id')
 
     with pytest.warns(AstropyDeprecationWarning):
-        jplhorizons.Horizons(id='Ceres', id_type='majorbody')
+        jplhorizons.HorizonsLegacy(id='Ceres', id_type='majorbody')
 
 
 def test_id_geodetic_coords():
@@ -319,7 +319,7 @@ def test_id_geodetic_coords():
         "body": 301
     }
 
-    q = jplhorizons.Horizons(id=target)
+    q = jplhorizons.HorizonsLegacy(id=target)
     for payload in (q.ephemerides(get_query_payload=True),
                     q.vectors(get_query_payload=True),
                     q.elements(get_query_payload=True)):
@@ -340,7 +340,7 @@ def test_location_topocentric_coords():
         "body": 301
     }
 
-    q = jplhorizons.Horizons(id=399, location=location)
+    q = jplhorizons.HorizonsLegacy(id=399, location=location)
     for payload in (q.ephemerides(get_query_payload=True),
                     q.vectors(get_query_payload=True)):
         assert payload["CENTER"] == 'coord@301'

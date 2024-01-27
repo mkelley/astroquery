@@ -8,7 +8,7 @@ a collection of data services provided by JPL
 """
 
 from .sbdb import SBDB, SBDBClass
-from .horizons import Horizons, HorizonsClass
+from .horizons import HorizonsLegacy, HorizonsLegacyClass
 
 
-__all__ = ["SBDB", "SBDBClass", "Horizons", "HorizonsClass"]
+__all__ = ["SBDB", "SBDBClass", "HorizonsLegacy", "HorizonsLegacyClass"]

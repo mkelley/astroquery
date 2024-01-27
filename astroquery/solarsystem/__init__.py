@@ -7,11 +7,11 @@ astroquery.solarsystem
 a collection of Solar-System related data services
 """
 
-from .jpl import SBDB, SBDBClass, Horizons, HorizonsClass
+from .jpl import SBDB, SBDBClass, HorizonsLegacy, HorizonsLegacyClass
 from .imcce import Miriade, MiriadeClass, Skybot, SkybotClass
 from .mpc import MPC, MPCClass
 
 
-__all__ = ["SBDB", "SBDBClass", "Horizons", "HorizonsClass",
+__all__ = ["SBDB", "SBDBClass", "HorizonsLegacy", "HorizonsLegacyClass",
            "Miriade", "MiriadeClass", "Skybot", "SkybotClass",
            "MPC", "MPCClass"]

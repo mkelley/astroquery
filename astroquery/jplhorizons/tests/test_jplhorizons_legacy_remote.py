@@ -18,7 +18,7 @@ class TestHorizonsClass:
     def test_ephemerides_query(self):
         # check all values of Ceres for a given epoch
         quantities = ",".join(str(q) for q in range(1, 49))
-        horizons = jplhorizons.Horizons(
+        horizons = jplhorizons.HorizonsLegacy(
             id="Ceres", location="I41", id_type="smallbody", epochs=2451544.5
         )
         res = horizons.ephemerides(quantities=quantities)
@@ -140,7 +140,7 @@ class TestHorizonsClass:
 
     def test_ephemerides_query_two(self):
         # check comet ephemerides using options
-        obj = jplhorizons.Horizons(id='Halley', id_type='comet_name',
+        obj = jplhorizons.HorizonsLegacy(id='Halley', id_type='comet_name',
                                    location='290',
                                    epochs={'start': '2080-01-01',
                                            'stop': '2080-02-01',
@@ -164,7 +164,7 @@ class TestHorizonsClass:
 
     def test_ephemerides_query_three(self):
         # checks no_fragments option for comets
-        obj = jplhorizons.Horizons(id='73P', id_type='designation',
+        obj = jplhorizons.HorizonsLegacy(id='73P', id_type='designation',
                                    location='290',
                                    epochs={'start': '2080-01-01',
                                            'stop': '2080-02-01',
@@ -188,7 +188,7 @@ class TestHorizonsClass:
     def test_ephemerides_query_four(self):
         # checks for missing M1 with a comet; 167P satisfies this as
         # of 18 June 2018
-        obj = jplhorizons.Horizons(id='167P', id_type='designation',
+        obj = jplhorizons.HorizonsLegacy(id='167P', id_type='designation',
                                    location='I41',
                                    epochs={'start': '2080-01-01',
                                            'stop': '2080-02-01',
@@ -216,7 +216,7 @@ class TestHorizonsClass:
     def test_ephemerides_query_five(self):
         # checks for missing phase coefficient with a comet; 12P
         # satisfies this as of 18 June 2018
-        obj = jplhorizons.Horizons(id='12P', id_type='designation',
+        obj = jplhorizons.HorizonsLegacy(id='12P', id_type='designation',
                                    location='I41',
                                    epochs={'start': '2080-01-01',
                                            'stop': '2080-02-01',
@@ -242,7 +242,7 @@ class TestHorizonsClass:
 
     def test_ephemerides_query_six(self):
         # tests optional constrains for ephemerides queries
-        obj = jplhorizons.Horizons(id='3552', id_type='smallbody',
+        obj = jplhorizons.HorizonsLegacy(id='3552', id_type='smallbody',
                                    location='I33',
                                    epochs={'start': '2018-05-01',
                                            'stop': '2018-08-01',
@@ -260,7 +260,7 @@ class TestHorizonsClass:
     def test_ephemerides_query_raw(self):
         # deprecated as of #2418
         with pytest.warns(AstropyDeprecationWarning):
-            res = (jplhorizons.Horizons(id='Ceres',
+            res = (jplhorizons.HorizonsLegacy(id='Ceres',
                                         location='500',
                                         id_type='smallbody',
                                         epochs=2451544.5)
@@ -269,7 +269,7 @@ class TestHorizonsClass:
         assert len(res) >= 15400
 
     def test_elements_query(self):
-        res = jplhorizons.Horizons(id='Ceres', location='500@10',
+        res = jplhorizons.HorizonsLegacy(id='Ceres', location='500@10',
                                    id_type='smallbody',
                                    epochs=[2451544.5,
                                            2451545.5]).elements()[0]
@@ -298,7 +298,7 @@ class TestHorizonsClass:
              res['P']], rtol=1e-3)
 
     def test_elements_query_two(self):
-        obj = jplhorizons.Horizons(id='Ceres', location='500@10',
+        obj = jplhorizons.HorizonsLegacy(id='Ceres', location='500@10',
                                    id_type='smallbody',
                                    epochs=[2451544.5,
                                            2451545.5])
@@ -316,7 +316,7 @@ class TestHorizonsClass:
     def test_elements_query_raw(self):
         # deprecated as of #2418
         with pytest.warns(AstropyDeprecationWarning):
-            res = (jplhorizons.Horizons(id='Ceres',
+            res = (jplhorizons.HorizonsLegacy(id='Ceres',
                                         location='500@10',
                                         id_type='smallbody',
                                         epochs=2451544.5)
@@ -327,7 +327,7 @@ class TestHorizonsClass:
     def test_vectors_query(self):
         # check values of Ceres for a given epoch
         # orbital uncertainty of Ceres is basically zero
-        res = jplhorizons.Horizons(id='Ceres', location='500@10',
+        res = jplhorizons.HorizonsLegacy(id='Ceres', location='500@10',
                                    id_type='smallbody',
                                    epochs=2451544.5).vectors()[0]
 
@@ -353,7 +353,7 @@ class TestHorizonsClass:
     def test_vectors_query_raw(self):
         # deprecated as of #2418
         with pytest.warns(AstropyDeprecationWarning):
-            res = (jplhorizons.Horizons(id='Ceres',
+            res = (jplhorizons.HorizonsLegacy(id='Ceres',
                                         location='500@10',
                                         id_type='smallbody',
                                         epochs=2451544.5)
@@ -370,7 +370,7 @@ class TestHorizonsClass:
     )
     def test_vectors_query_topocentric_coordinates(self, location):
         "Test vectors query specifying observer's longitude, latitude, and elevation"
-        q = jplhorizons.Horizons(id='Ceres',
+        q = jplhorizons.HorizonsLegacy(id='Ceres',
                                  location=location,
                                  id_type='smallbody',
                                  epochs=2451544.5)
@@ -386,16 +386,16 @@ class TestHorizonsClass:
 
     def test_unknownobject(self):
         with pytest.raises(ValueError):
-            jplhorizons.Horizons(id='spamspamspameggsspam', location='500',
+            jplhorizons.HorizonsLegacy(id='spamspamspameggsspam', location='500',
                                  epochs=2451544.5).ephemerides()
 
     def test_multipleobjects(self):
         with pytest.raises(ValueError):
-            jplhorizons.Horizons(id='73P', location='500', id_type='smallbody',
+            jplhorizons.HorizonsLegacy(id='73P', location='500', id_type='smallbody',
                                  epochs=2451544.5).ephemerides()
 
     def test_uri(self):
-        target = jplhorizons.Horizons(id='3552', location='500',
+        target = jplhorizons.HorizonsLegacy(id='3552', location='500',
                                       id_type='smallbody', epochs=2451544.5)
         assert target.uri is None
 
@@ -421,12 +421,12 @@ class TestHorizonsClass:
                          'lat': 35.096944,
                          'elevation': 2.163}
 
-        am_res = jplhorizons.Horizons(id='Ceres',
+        am_res = jplhorizons.HorizonsLegacy(id='Ceres',
                                       location='688',
                                       id_type='smallbody',
                                       epochs=2451544.5).ephemerides()[0]
 
-        user_res = jplhorizons.Horizons(id='Ceres',
+        user_res = jplhorizons.HorizonsLegacy(id='Ceres',
                                         location=anderson_mesa,
                                         id_type='smallbody',
                                         epochs=2451544.5).ephemerides()[0]
@@ -447,7 +447,7 @@ class TestHorizonsClass:
         quantities = ('1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,'
                       '21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,'
                       '38,39,40,41,42,43')
-        target = jplhorizons.Horizons(id='301', location='688', epochs=epochs)
+        target = jplhorizons.HorizonsLegacy(id='301', location='688', epochs=epochs)
         eph = target.ephemerides(quantities=quantities)
         assert len(eph) == 2
 
@@ -467,7 +467,7 @@ class TestHorizonsClass:
         """
 
         # verify data['a-mass'].filled(99) works:
-        target = jplhorizons.Horizons('Ceres', location='I41',
+        target = jplhorizons.HorizonsLegacy('Ceres', location='I41',
                                       id_type='smallbody',
                                       epochs=[2458300.5])
         eph = target.ephemerides(quantities='1,8')
@@ -479,7 +479,7 @@ class TestHorizonsClass:
 
     def test_vectors_aberrations(self):
         """Check functionality of `aberrations` options"""
-        obj = jplhorizons.Horizons(id='1', epochs=2458500, location='500@0',
+        obj = jplhorizons.HorizonsLegacy(id='1', epochs=2458500, location='500@0',
                                    id_type='smallbody')
 
         vec = obj.vectors(aberrations='geometric')
@@ -492,7 +492,7 @@ class TestHorizonsClass:
         assert_quantity_allclose(vec['x'][0], -2.086576286974797)
 
     def test_vectors_delta_T(self):
-        obj = jplhorizons.Horizons(id='1', epochs=2458500, location='500@0',
+        obj = jplhorizons.HorizonsLegacy(id='1', epochs=2458500, location='500@0',
                                    id_type='smallbody')
 
         vec = obj.vectors(delta_T=False)
@@ -502,7 +502,7 @@ class TestHorizonsClass:
         assert_quantity_allclose(vec['delta_T'][0], 69.184373)
 
     def test_ephemerides_extraprecision(self):
-        obj = jplhorizons.Horizons(id='1', epochs=2458500, location='G37',
+        obj = jplhorizons.HorizonsLegacy(id='1', epochs=2458500, location='G37',
                                    id_type='smallbody')
 
         vec_simple = obj.ephemerides(extra_precision=False)
@@ -517,8 +517,8 @@ class TestHorizonsClass:
         """
         phobos = {'body': 401, 'lon': -30, 'lat': -20, 'elevation': 0}
         deimos = {'body': 402, 'lon': -10, 'lat': -40, 'elevation': 0}
-        deimos_phobos = jplhorizons.Horizons(phobos, location=deimos, epochs=2.4e6)
-        phobos_deimos = jplhorizons.Horizons(deimos, location=phobos, epochs=2.4e6)
+        deimos_phobos = jplhorizons.HorizonsLegacy(phobos, location=deimos, epochs=2.4e6)
+        phobos_deimos = jplhorizons.HorizonsLegacy(deimos, location=phobos, epochs=2.4e6)
         pd_eph, dp_eph = phobos_deimos.ephemerides(), deimos_phobos.ephemerides()
         dp_xyz = spherical_to_cartesian(
             dp_eph['delta'], dp_eph['DEC'], dp_eph['RA']

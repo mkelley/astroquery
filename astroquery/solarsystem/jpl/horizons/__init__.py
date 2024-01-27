@@ -7,7 +7,7 @@ SOLARSYSTEM.JPL.HORIZONS
 :author: Michael Mommert (mommermiscience@gmail.com)
 """
 
-from ....jplhorizons import Horizons, HorizonsClass
+from ....jplhorizons import HorizonsLegacy, HorizonsLegacyClass
 
 
-__all__ = ["Horizons", "HorizonsClass"]
+__all__ = ["HorizonsLegacy", "HorizonsLegacyClass"]
