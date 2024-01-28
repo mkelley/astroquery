@@ -26,7 +26,10 @@ class Conf(_config.ConfigNamespace):
     )
     
     # supported Horizons API version
-    api_version = "1.2"
+    api_version = _config.ConfigItem(
+        "1.2",
+        "Supported Horizons API version."
+    )
 
 
 class LegacyConf(_config.ConfigNamespace):

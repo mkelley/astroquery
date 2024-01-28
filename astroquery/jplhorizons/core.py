@@ -2,7 +2,8 @@
 
 __all__ = ["Horizons", "HorizonsClass"]
 
-from typing import Dict, Optional, Union
+import warnings
+from typing import Dict, List, Optional, Union
 
 from requests import Response
 import astropy.units as u
@@ -15,6 +16,7 @@ from ..query import BaseQuery
 from ..utils import commons
 from ..utils import prepend_docstr_nosections
 from ..utils import async_to_sync
+from ..exceptions import ApiVersionWarning
 from . import conf
 
 @async_to_sync
@@ -23,91 +25,10 @@ class HorizonsClass(BaseQuery):
     Query the `JPL Horizons <https://ssd.jpl.nasa.gov/horizons/>`_ service.
     """
 
-    URL: str = conf.server
-    TIMEOUT: int = conf.timeout
-
-    def _format_command(self,
-                     target: str,
-                     query_type: Union[str, None],
-                     closest_apparition: Union[bool, Time],
-                     fragments: bool
-                    ) -> str:
-        """Form the COMMAND parameter."""
-
-        query_type_to_command_prefix: Dict[str, str] = {
-            "designation": "DES=",
-            "name": "NAME=",
-            "asteroid name": "ASTNAM=",
-            "comet name": "COMNAM=",
-            "small body": "",
-            None: "",
-            # legacy compatibility:
-            "asteroid_name": "ASTNAM=",
-            "smallbody": "",
-            "comet_name": "COMNAM=",
-        }
-
-        query_type_to_command_suffix: Dict[str, str] = {
-            "designation": ";",
-            "name": ";",
-            "asteroid name": ";",
-            "comet name": ";",
-            "small body": ";",
-            None: "",
-            # legacy compatibility:
-            "asteroid_name": ";",
-            "smallbody": ";",
-            "comet_name": ";",
-        }
-
-        try:
-            prefix: str = query_type_to_command_prefix[query_type]
-        except KeyError as exc:
-            raise KeyError("Invalid query_type") from exc
-        
-        suffix: str = query_type_to_command_suffix[query_type]
-
-        cap: str = ""
-        if query_type in ["designation", "name", "comet name", "comet_name"]:
-            if closest_apparition is True:
-                cap = "CAP;"
-            elif isinstance(closest_apparition, Time):
-                cap = "CAP<{:.1f};".format(closest_apparition.jd)
-
-        fragments: str = "NOFRAG;" if fragments is False else ""
-
-        return "".join([prefix, target, suffix, cap, fragments])
-
-    def _format_center(self, center: Union[str, EarthLocation]) -> Dict[str, str]:
-        """Form the CENTER parameter.
-        
-        GEODETIC (generally this means map coordinates)
-            E-long - Geodetic east longitude (DEGREES)
-            lat    - Geodetic latitude  (DEGREES)
-            h      - Altitude above reference ellipsoid (km)
-
-        Comma separated values.
-
-        """
-
-        if isinstance(center, str):
-            return {"center": center}
-        elif isinstance(center, EarthLocation):
-            loc: GeodeticLocation = center.to_geodetic("WGS84")
-
-            site_coord: str = (
-                f"{loc.lon.deg},{loc.lat.deg},{loc.height.to_value('km')}"
-            )
-
-            return {
-                "center": "coord@399",
-                "coord_type": "geodetic",
-                "site_coord": site_coord,
-            }
-        
-        raise TypeError("center must be a string or `EarthLocation`")
-        
-        
+    def __init__(self):
+        self.URL: str = conf.server
+        self.TIMEOUT: int = conf.timeout
+        self.API_VERSION: str = conf.api_version
 
     def query_observer_async(self,
                              target: str,
@@ -308,7 +229,106 @@ class HorizonsClass(BaseQuery):
 
         """
         pass
+
+    def _format_command(self,
+                     target: str,
+                     query_type: Union[str, None],
+                     closest_apparition: Union[bool, Time],
+                     fragments: bool
+                    ) -> str:
+        """Form the COMMAND parameter."""
+
+        query_type_to_command_prefix: Dict[str, str] = {
+            "designation": "DES=",
+            "name": "NAME=",
+            "asteroid name": "ASTNAM=",
+            "comet name": "COMNAM=",
+            "small body": "",
+            None: "",
+            # legacy compatibility:
+            "asteroid_name": "ASTNAM=",
+            "smallbody": "",
+            "comet_name": "COMNAM=",
+        }
+
+        query_type_to_command_suffix: Dict[str, str] = {
+            "designation": ";",
+            "name": ";",
+            "asteroid name": ";",
+            "comet name": ";",
+            "small body": ";",
+            None: "",
+            # legacy compatibility:
+            "asteroid_name": ";",
+            "smallbody": ";",
+            "comet_name": ";",
+        }
+
+        try:
+            prefix: str = query_type_to_command_prefix[query_type]
+        except KeyError as exc:
+            raise KeyError("Invalid query_type") from exc
         
+        suffix: str = query_type_to_command_suffix[query_type]
+
+        cap: str = ""
+        if query_type in ["designation", "name", "comet name", "comet_name"]:
+            if closest_apparition is True:
+                cap = "CAP;"
+            elif isinstance(closest_apparition, Time):
+                cap = "CAP<{:.1f};".format(closest_apparition.jd)
+
+        fragments: str = "NOFRAG;" if fragments is False else ""
+
+        return "".join([prefix, target, suffix, cap, fragments])
+
+    def _format_center(self, center: Union[str, EarthLocation, None]) -> Dict[str, str]:
+        """Form the CENTER parameter.
+        
+        GEODETIC (generally this means map coordinates)
+            E-long - Geodetic east longitude (DEGREES)
+            lat    - Geodetic latitude  (DEGREES)
+            h      - Altitude above reference ellipsoid (km)
+
+        Comma separated values.
+
+        """
+
+        if center is None:
+            return {}
+        elif isinstance(center, str):
+            return {"center": center}
+        elif isinstance(center, EarthLocation):
+            loc: GeodeticLocation = center.to_geodetic("WGS84")
+
+            site_coord: str = (
+                f"{loc.lon.deg},{loc.lat.deg},{loc.height.to_value('km')}"
+            )
+
+            return {
+                "center": "coord@399",
+                "coord_type": "geodetic",
+                "site_coord": site_coord,
+            }
+        
+        raise TypeError("center must be a string or `EarthLocation`")
+
+    def _parse_result(self, response):
+        content: dict = response.json()
+
+        # major.minor version check
+        version: List[str] = content["signature"]["version"].split(".")[:2]
+        if version != conf.api_version.split("."):
+            warnings.warn("Horizons API version does not match expected value:"
+                          " {}, {}".format(version, conf.api_version),
+                          ApiVersionWarning)
+
+        result: str = content["result"]
+
+        print(result)
+
+
+
 
 # the default tool for users to interact with is an instance of the Class
-Horizons = HorizonsClass()
+Horizons: HorizonsClass = HorizonsClass()

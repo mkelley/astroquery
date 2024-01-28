@@ -119,3 +119,9 @@ class BlankResponseWarning(AstropyWarning):
     Astroquery warning to be raised if one or more rows in a table are bad, but
     not all rows are.
     """
+
+
+class ApiVersionWarning(AstropyWarning):
+    """
+    Astroquery warning to be raise when the API version does not match a supported or expected value.
+    """

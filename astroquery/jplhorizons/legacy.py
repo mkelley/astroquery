@@ -108,10 +108,10 @@ class HorizonsLegacyClass(BaseQuery):
         --------
 
         >>> from astroquery.jplhorizons import Horizons
-        >>> eros = Horizons(id='433', location='568',
-        ...                 epochs={'start': '2017-01-01',
-        ...                         'stop': '2017-02-01',
-        ...                         'step': '1d'})
+        >>> eros = HorizonsLegacy(id='433', location='568',
+        ...                       epochs={'start': '2017-01-01',
+        ...                               'stop': '2017-02-01',
+        ...                               'step': '1d'})
         >>> print(eros)
         JPLHorizons instance "433"; location=568,
         epochs={'start': '2017-01-01', 'stop': '2017-02-01', 'step': '1d'}, id_type=None
@@ -164,10 +164,10 @@ class HorizonsLegacyClass(BaseQuery):
         --------
 
         >>> from astroquery.jplhorizons import Horizons
-        >>> eros = Horizons(id='433', location='568',
-        ...                 epochs={'start':'2017-01-01',
-        ...                         'stop':'2017-02-01',
-        ...                         'step':'1d'})
+        >>> eros = HorizonsLegacy(id='433', location='568',
+        ...                       epochs={'start':'2017-01-01',
+        ...                               'stop':'2017-02-01',
+        ...                               'step':'1d'})
         >>> print(eros)
         JPLHorizons instance "433"; location=568,
         epochs={'start': '2017-01-01', 'stop': '2017-02-01', 'step': '1d'}, id_type=None
@@ -228,10 +228,10 @@ class HorizonsLegacyClass(BaseQuery):
 
         .. deprecated:: 0.4.7
            The ``get_raw_response`` keyword argument is deprecated.  The
-           `~HorizonsClass.ephemerides_async` method will return a raw response.
+           `~HorizonsLegacyClass.ephemerides_async` method will return a raw response.
 
-        The ``location`` parameter in ``HorizonsClass`` refers in this case to
-        the location of the observer.
+        The ``location`` parameter in ``HorizonsLegacyClass`` refers in this
+        case to the location of the observer.
 
         The following tables list the values queried, their definitions, data
         types, units, and original Horizons designations (where available). For
@@ -565,9 +565,10 @@ class HorizonsLegacyClass(BaseQuery):
             default: all quantities
 
         optional_settings: dict, optional
-            key-value based dictionary to inject some additional optional settings
-            See `Optional observer-table settings" <https://ssd.jpl.nasa.gov/horizons.cgi?s_tset=1>`_;
-            default: empty optional setting
+            key-value based dictionary to inject some additional optional
+            settings See `Optional observer-table settings"
+            <https://ssd.jpl.nasa.gov/horizons.cgi?s_tset=1>`_; default: empty
+            optional setting
 
         get_query_payload : boolean, optional
             When set to `True` the method returns the HTTP request parameters as
@@ -591,10 +592,10 @@ class HorizonsLegacyClass(BaseQuery):
         --------
 
         >>> from astroquery.jplhorizons import Horizons
-        >>> obj = Horizons(id='Ceres', location='568',
-        ...             epochs={'start':'2010-01-01',
-        ...                     'stop':'2010-03-01',
-        ...                     'step':'10d'})
+        >>> obj = HorizonsLegacy(id='Ceres', location='568',
+        ...                      epochs={'start':'2010-01-01',
+        ...                              'stop':'2010-03-01',
+        ...                              'step':'10d'})
         >>> eph = obj.ephemerides()  # doctest: +REMOTE_DATA
         >>> print(eph)  # doctest: +SKIP
             targetname       datetime_str   datetime_jd ...  PABLon  PABLat
@@ -732,10 +733,10 @@ class HorizonsLegacyClass(BaseQuery):
 
         .. deprecated:: 0.4.7
            The ``get_raw_response`` keyword argument is deprecated.  The
-           `~HorizonsClass.elements_async` method will return a raw response.
+           `~HorizonsLegacyClass.elements_async` method will return a raw response.
 
-        The ``location`` parameter in ``HorizonsClass`` refers in this case to
-        the center body relative to which the elements are provided.
+        The ``location`` parameter in ``HorizonsLegacyClass`` refers in this
+        case to the center body relative to which the elements are provided.
 
         The following table lists the values queried, their definitions, data
         types, units, and original Horizons designations (where available). For
@@ -837,8 +838,8 @@ class HorizonsLegacyClass(BaseQuery):
         --------
 
         >>> from astroquery.jplhorizons import Horizons
-        >>> obj = Horizons(id='433', location='500@10',
-        ...                epochs=2458133.33546)
+        >>> obj = HorizonsLegacy(id='433', location='500@10',
+        ...                      epochs=2458133.33546)
         >>> el = obj.elements()  # doctest: +REMOTE_DATA
         >>> print(el)  # doctest: +SKIP
             targetname      datetime_jd  ...       Q            P
@@ -958,10 +959,10 @@ class HorizonsLegacyClass(BaseQuery):
 
         .. deprecated:: 0.4.7
            The ``get_raw_response`` keyword argument is deprecated.  The
-           `~HorizonsClass.vectors_async` method will return a raw response.
+           `~HorizonsLegacyClass.vectors_async` method will return a raw response.
 
-        The ``location`` parameter in ``HorizonsClass`` refers in this case to
-        the center body relative to which the vectors are provided.
+        The ``location`` parameter in ``HorizonsLegacyClass`` refers in this
+        case to the center body relative to which the vectors are provided.
 
         The following table lists the values queried, their definitions, data
         types, units, and original Horizons designations (where available). For
@@ -1070,10 +1071,10 @@ class HorizonsLegacyClass(BaseQuery):
         --------
 
         >>> from astroquery.jplhorizons import Horizons
-        >>> obj = Horizons(id='2012 TC4', location='257',
-        ...                epochs={'start': '2017-10-01',
-        ...                        'stop': '2017-10-02',
-        ...                        'step': '10m'})
+        >>> obj = HorizonsLegacy(id='2012 TC4', location='257',
+        ...                      epochs={'start': '2017-10-01',
+        ...                              'stop': '2017-10-02',
+        ...                              'step': '10m'})
         >>> vec = obj.vectors()  # doctest: +REMOTE_DATA
         >>> print(vec)  # doctest: +SKIP
         targetname  datetime_jd  ...      range          range_rate
